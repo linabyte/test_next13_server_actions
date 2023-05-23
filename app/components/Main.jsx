@@ -1,23 +1,22 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Suspense } from 'react';
+import { fetchData } from "../actions_server";
 
-const Main = ({fetchData}) => {
+import { useTransition } from "react";
 
+const Main = () => {
+
+    let [isPending, startTransition] = useTransition();
     const [data, setData] = useState([]);
     const [status, setStatus] = useState(0);
     const [url, setUrl] = useState('posts');
 
     useEffect(() => {
-
-        const dataFetch = async () => {
-            const dataMain = await fetchData({url});
+        startTransition(async () => {
+            const dataMain = await fetchData(url);
             setData(dataMain);
-        }
-
-        dataFetch();
-
+         })
     }, [status]);
 
     const handleClick = () => {
@@ -28,22 +27,25 @@ const Main = ({fetchData}) => {
     return (
         <div>
             <section>
-                <button onClick={handleClick}>Actualizar {status} - {url}</button>
+                <button className="block p-4 bg-sky-600 text-white hover:bg-sky-800" onClick={handleClick}>Obtener {url}</button><br></br>
+                <span className="text-white text-sm">Hiciste click {status} veces!</span>
             </section>
 
-            <Suspense fallback={<h1>Loading Posts...</h1>}>
-                <section>
-                    {
-                    data.map(item => (
-                        <div key={item.id}>
-                        <h1 className="text-xl text-slate-600">{url === 'posts' ? item.title : item.name}</h1>
-                        <p>{item.body}</p><br></br>
-                        </div>
-                    ))
-                    }
-                </section>
-            </Suspense>
+            <section className="mt-3 py-3">
+            <h1 className="text-lg text-white">{isPending ? `Loading ${url}...` : ''}</h1><br></br>
 
+
+                {
+                    !isPending ? ( 
+                        data.map(item => (
+                            <div key={item.id}>
+                            <h1 className="text-xl text-sky-300">{url === 'posts' ? item.title : item.name}</h1>
+                            <p className="text-white">{item.body}</p><br></br>
+                            </div>
+                        ))
+                    ) : ('')
+                }
+            </section>
         </div>
     )
 }
